@@ -1,0 +1,282 @@
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Realistic water visualization in 3D</title>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.28/esri/themes/light/main.css" />
+  <script src="https://js.arcgis.com/4.28/"></script>
+
+  <style>
+    html,
+    body,
+    #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+    #menu {
+      padding: 1em;
+    }
+    #waveSlider {
+      height: 50px;
+      margin-top: 2em;
+    }
+    .color-btn {
+      border: 1px solid rgb(173, 172, 172);
+      width: 40px;
+      height: 20px;
+      cursor: pointer;
+    }
+    #navy {
+      background-color: #25427c;
+    }
+    #green {
+      background-color: #039962;
+    }
+    #turqoise {
+      background-color: #a2f9f5;
+    }
+  </style>
+
+  <script>
+    const clientId = "JY0l5XAigaiMEZvg";
+    const arcgisPortal = "https://harvard-cga.maps.arcgis.com"  //"https://harvardworldmap.maps.arcgis.com/"
+    const portalEndpoint = "sharing/rest/oauth2/token/";
+
+    require(["esri/portal/Portal"], (Portal) => {
+        const portal = new Portal();
+        portal.load().then(() => {
+            console.log(portal.name);  // Prints the portal name
+        });
+    });
+
+    //Create a new OAuthInfo object.
+    let info = new OAuthInfo({
+      // Swap this ID out with an app ID registered in your ArcGIS Organization.
+      appId: clientId,
+      portalUrl: arcgisPortal + portalEndpoint,
+      // Set the authNamespace property to prevent the user's signed in state
+      // from being shared with other apps on the same domain with the same authNamespace value.
+      authNamespace: "portal_oauth_inline",
+      // Set popup to true to show the OAuth sign-in page in a separate popup window.
+      popup: true
+    });
+
+    // Add the OAuthInfo to the IdentityManager.
+    esriId.registerOAuthInfos([info]);
+    // Function to sign in or out of the portal used by the sign in/out button click event.
+    function signInOrOut() {
+      esriId
+              .checkSignInStatus(info.portalUrl + "/sharing")
+              .then(() => {
+                // If already signed in, then destroy the credentials to sign out.
+                esriId.destroyCredentials();
+                window.location.reload();
+              })
+              .catch(() => {
+                // If the user is not signed in, generate a new credential.
+                esriId
+                        .getCredential(info.portalUrl + "/sharing", {
+                          // Set the following property to false to not show a dialog
+                          // before the OAuth popup window is open.
+                          //oAuthPopupConfirmation: false,
+                        })
+                        .then(() => {
+                          // Once a credential is returned from the promise, check the
+                          // sign in status to query the portal for items.
+                          checkSignIn();
+                        });
+              });
+    }
+    checkSignIn()
+    function checkSignIn(){
+
+    require(["esri/portal/Portal",
+      "esri/identity/OAuthInfo",
+      "esri/identity/IdentityManager",
+      "esri/portal/PortalQueryParams"]),(Portal, OAuthInfo, esriId, PortalQueryParams) => {
+      const portal = new Portal();
+      portal.authMode = "immediate";
+      portal.load().then(() => {
+        console.log(portal.name);  // Prints the portal name
+      });
+
+      esriId
+              .checkSignInStatus(info.portalUrl + "/sharing")
+              .then(() => {
+                navigationUser.hidden = false;
+                signInButton.hidden = true;
+                const portal = new Portal({
+                  authMode: "immediate"
+                });
+                // Check if using a portal other than ArcGIS Online.
+                if (info.portalUrl !== "https://www.arcgis.com") {
+                  portal.url = info.portalUrl;
+                }
+                // Load the portal, display the name and username, then call the query items function.
+                portal.load().then(() => {
+                  navigationUser.fullName = portal.user.fullName;
+                  navigationUser.username = portal.user.username;
+                  navLogo.description =
+                          "Gallery of queried portal items displayed below. To sign out, click on the logged in user button.";
+                  queryItems(portal);
+                });
+              })
+              .catch(() => {
+                // If not signed in, then show the sign in button.
+                signInButton.hidden = false;
+                navigationUser.hidden = true;
+                navLogo.description = "Use OAuth to log in to an ArcGIS Organization to view your items.";
+              });
+    }
+
+
+    }
+   // try{loadScene()}catch(e){console.log(e + "error" + e.message)}
+    function  getSession() {
+    //const { ApplicationSession } = require("@esri/arcgis-rest-auth"); // npm install @esri/arcgis-rest-auth
+   const { ApplicationSession } = require("@esri/arcgis-rest-auth"); // npm install @esri/arcgis-rest-auth
+
+      const session = new ApplicationSession({
+      clientId: "JY0l5XAigaiMEZvg",
+      clientSecret: "307e9ba4faa84dbdbc9cd61ed7586277",
+      duration: 1440
+    });
+    session.getToken("https://www.arcgis.com/sharing/rest/oauth2/token")
+            .then(function(response) {
+              // response is your access_token, in this case it is good for 1440 minutes
+              console.log("success" + response)
+            }).catch(function(error) {
+     console.log("error" + error)
+      // request failed, handle errors
+    });
+    return session;
+    }
+
+      let web_scene_id = document.getElementById("web_scene_id");
+
+    const { loadDreamNeighbourhood } =   require([
+        "esri/WebScene",
+        "esri/views/SceneView",
+        "esri/layers/FeatureLayer",
+        "esri/widgets/Slider"
+      ], (WebScene, SceneView, FeatureLayer, Slider) => {
+
+        const webscene = new WebScene({
+          portalItem: {
+            // id: "2532c872d34f441186a65de21658d3cd"
+            id: "b9e8cf5332094687868d067f8ef27ade"
+
+          }
+        });
+        const view = new SceneView({
+          container: "viewDiv",
+          map: webscene
+        });
+
+        const waterLayer = new FeatureLayer({
+          url: "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Water_bodies/FeatureServer/0",
+          elevationInfo: {
+            mode: "absolute-height",
+            offset: 0,
+          },
+          renderer: {
+            type: "simple",
+            symbol: {
+              type: "polygon-3d",
+              symbolLayers: [{
+                type: "water",
+                waveDirection: 260,
+                color: "#25427c",
+                waveStrength: "moderate",
+                waterbodySize: "medium"
+              }]
+            }
+          }
+        });
+
+        webscene.add(waterLayer);
+        view.ui.add("menu", "top-right");
+
+        const slider = new Slider({
+          container: "waveSlider",
+          min: 0,
+          max: 360,
+          visibleElements: {
+            labels: true,
+          },
+          precision: 0,
+          values: [260]
+        });
+
+        slider.on("thumb-drag", (event) => {
+          const value = parseInt(event.value);
+          const renderer = waterLayer.renderer.clone();
+          renderer.symbol.symbolLayers.getItemAt(0).waveDirection = value;
+          waterLayer.renderer = renderer;
+        });
+
+        const waveStrengthRadio = document.getElementsByName("waveStrengthRadio");
+
+        for (let i = 0; i < waveStrengthRadio.length; i++) {
+          const element = waveStrengthRadio[i];
+          element.addEventListener("change", (event) => {
+            const renderer = waterLayer.renderer.clone();
+            renderer.symbol.symbolLayers.getItemAt(0).waveStrength = event.target.value;
+            waterLayer.renderer = renderer;
+          });
+        }
+        ;
+
+        function setWaterColor(color) {
+          const renderer = waterLayer.renderer.clone();
+          renderer.symbol.symbolLayers.getItemAt(0).color = color;
+          waterLayer.renderer = renderer;
+        }
+
+        document.getElementById("navy").addEventListener("click", () => {
+          setWaterColor("#25427c");
+        });
+        document.getElementById("green").addEventListener("click", () => {
+          setWaterColor("#039962");
+        });
+        document.getElementById("turqoise").addEventListener("click", () => {
+          setWaterColor("#a2f9f5");
+        });
+      });
+
+
+    loadDreamNeighbourhood({
+
+      authentication: getSession(),
+
+    }).then(function(response) {
+      // response is your access_token, in this case it is good for 1440 minutes
+      console.log("success" + response)
+    }).catch(function(error) {
+      console.log("error" + error)
+      // request failed, handle errors
+    });
+
+  </script>
+</head>
+<body>
+<div id="viewDiv"></div>
+<input id="web_scene_id" type="hidden" value="2532c872d34f441186a65de21658d3cd"/>
+<div id="menu" class="esri-widget">
+  <h4>Wave direction</h4>
+  <div id="waveSlider"></div>
+  <h4>Wave strength</h4>
+  <input type="radio" name="waveStrengthRadio" value="calm" id="calm"><label for="calm">Calm</label><br>
+  <input type="radio" name="waveStrengthRadio" value="rippled" id="rippled"><label for="rippled">Rippled</label><br>
+  <input type="radio" name="waveStrengthRadio" value="slight" id="slight"><label for="slight">Slight</label><br>
+  <input type="radio" name="waveStrengthRadio" value="moderate" id="moderate" checked>
+  <label for="moderate">Moderate</label>
+  <br><h4> Dominant color</h4>
+  <button id="navy" class="color-btn"></button>
+  <button id="green" class="color-btn"></button>
+  <button id="turqoise" class="color-btn"></button>
+</div>
+</body>
+</html>

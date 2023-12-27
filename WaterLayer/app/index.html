@@ -5,8 +5,6 @@
   <title>Realistic water visualization in 3D</title>
   <link rel="stylesheet" href="https://js.arcgis.com/4.28/esri/themes/light/main.css" />
   <script src="https://js.arcgis.com/4.28/"></script>
-  <script type="module" src="https://js.arcgis.com/calcite-components/1.9.2/calcite.esm.js"></script>
-  <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.9.2/calcite.css" />
 
   <style>
     html,
@@ -40,46 +38,98 @@
       background-color: #a2f9f5;
     }
   </style>
-  <script>
-    let web_scene_id = document.getElementById("web_scene_id");
+  <script id="constants">
     const clientId = "JY0l5XAigaiMEZvg";
-    const clientSecret ="307e9ba4faa84dbdbc9cd61ed7586277";
-    const apiKey ="AAPK94552912f92044339f793453a64ea0f3jaPKY0TcXpPNcqyroJIv4b_q4Cc5iP573jCMtjGDbY6jKtAIli7A47B4OnM_wuxR";
-    const hapiKey = "AAPKd32a08f86e6b4eec8e366d1c31e86a571EI_Ixn-Rrhy2SGYbwN3Uu1iKvjRJXQkKpOuFzVlVIerGmcFbf3UBlyOOKodw6h4";
+    const arcgisServer = "https://services1.arcgis.com"
     const arcgisPortal = "https://harvardworldmap.maps.arcgis.com/"
     const portalEndpoint = "sharing/rest/oauth2/token/";
-    const tokenEndpoint = arcgisPortal  + "/arcgis/sharing/rest/oauth2/token/";
+  </script>
+<script>
+  let web_scene_id = document.getElementById("web_scene_id");
+
+  require([
+          "esri/portal",
+          "esri/config",
+          "esri/identity/OAuthInfo",
+          "esri/identity/IdentityManager",
+          "esri/identity/Credential",
+          "esri/portal/Portal",
+            "esri/core/promiseUtils",
+            "esri/core/urlUtils",
+            "esri/portal/PortalQueryParams",
+            "esri/portal/PortalItem",
+
+          ],(Portal,esri,OAuthInfo,IdentityManager,Credential) =>{
+
+  esri.portalUrl = arcgisPortal;
+  esri.request.trustedServers.push(arcgisServer);
+  esri.config.request.useIdentity = true;
+
+
+  const portalLogin = async Promise => {
+    const oAuthInfo = new OAuthInfo({
+      appId: clientId,
+      portalUrl: arcgisPortal + portalEndpoint,
+      popup: false,
+    });
+    portal = new Portal({
+      url: arcgisPortal + portalEndpoint,
+    });
+    await portal.load().then(() => {
+      console.log(portal);
+    });
+
+    IdentityManager.registerOAuthInfos([oAuthInfo]);
+    try {
+      const signInEvt: Credential = await IdentityManager.checkSignInStatus(
+              `${oAuthInfo.portalUrl}${endpoints.sharing}`
+      );
+      userId = signInEvt.userId;
+      storeCredentialsInApp({ portal: portal, userId: userId });
+    } catch (error) {
+      console.error(error.message);
+      const [signInEvt] = await Promise.all([IdentityManager.getCredential(
+              `${oAuthInfo.portalUrl}${endpoints.sharing}`,
+              {
+                oAuthPopupConfirmation: false,
+              }
+      )]);
+      userId = signInEvt.userId;
+      storeCredentialsInApp({ portal: portal, userId: userId });
+    }
+  };
+  })
+
+</script>
+  <script>
     require([
-      "esri/portal/Portal",
-      "esri/config",
       "esri/WebScene",
       "esri/views/SceneView",
       "esri/layers/FeatureLayer",
       "esri/widgets/Slider"
-    ], (Portal,esriConfig,WebScene, SceneView, FeatureLayer, Slider) => {
+    ], (WebScene, SceneView, FeatureLayer, Slider) => {
 
-      esriConfig.apiKey = apiKey;
-      const portal = new Portal({
-        url: arcgisPortal+ portalEndpoint,
-        authMode: "immediate"
-      });
 
-      portal.load().then(() => {
-        console.log(portal);
-      });
 
       const webscene = new WebScene({
         portalItem: {
           // id: "2532c872d34f441186a65de21658d3cd"
           id: "b9e8cf5332094687868d067f8ef27ade"
+
         }
       });
+
+
+
       const view = new SceneView({
         container: "viewDiv",
         map: webscene
       });
+
+
+
       const waterLayer = new FeatureLayer({
-        url:"https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Water_bodies/FeatureServer/0",
+        url: "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Water_bodies/FeatureServer/0",
         elevationInfo: {
           mode: "absolute-height",
           offset: 0,
@@ -107,9 +157,11 @@
         min: 0,
         max: 360,
         visibleElements: {
-          labels: true,},
+          labels: true,
+        },
         precision: 0,
-        values: [ 260 ]});
+        values: [260]
+      });
 
       slider.on("thumb-drag", (event) => {
         const value = parseInt(event.value);
@@ -127,7 +179,8 @@
           renderer.symbol.symbolLayers.getItemAt(0).waveStrength = event.target.value;
           waterLayer.renderer = renderer;
         });
-      };
+      }
+      ;
 
       function setWaterColor(color) {
         const renderer = waterLayer.renderer.clone();
@@ -145,6 +198,7 @@
         setWaterColor("#a2f9f5");
       });
     });
+
 
   </script>
 </head>

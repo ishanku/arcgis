@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.28/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.28/"></script>
+  <script>
+    const { ApplicationSession } = require("@esri/arcgis-rest-auth"); // npm install @esri/arcgis-rest-auth
+    const session = new ApplicationSession({
+      clientId: "PV0IPk6tXOYLzA5W",
+      clientSecret: "dda5cf1f541345aeb9c2e948f77ebe11",
+      duration: 1440
+    });
+    session.getToken("https://www.arcgis.com/sharing/rest/oauth2/token")
+            .then(function(response) {
+              // response is your access_token, in this case it is good for 1440 minutes
+                console.log(response)
+            }).catch(function(error) {
+      // request failed, handle errors
+    });
+
+    const { queryDemographicData } = require("@esri/arcgis-rest-demographics");
+
+    queryDemographicData({
+        studyAreas: [{"geometry":{"x":-117.1956,"y":34.0572}}],
+        authentication: session
+    })
+        .then((response) => {
+            response; // => { results: [ ... ] }
+            console.log(response)
+        });
+
+
+
+  </script>
+</head>
+<body>
+
+</body>
+</html>

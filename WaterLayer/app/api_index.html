@@ -5,9 +5,6 @@
   <title>Realistic water visualization in 3D</title>
   <link rel="stylesheet" href="https://js.arcgis.com/4.28/esri/themes/light/main.css" />
   <script src="https://js.arcgis.com/4.28/"></script>
-  <script type="module" src="https://js.arcgis.com/calcite-components/1.9.2/calcite.esm.js"></script>
-  <link rel="stylesheet" type="text/css" href="https://js.arcgis.com/calcite-components/1.9.2/calcite.css" />
-
   <style>
     html,
     body,
@@ -40,15 +37,14 @@
       background-color: #a2f9f5;
     }
   </style>
-  <script>
-    let web_scene_id = document.getElementById("web_scene_id");
-    const clientId = "JY0l5XAigaiMEZvg";
-    const clientSecret ="307e9ba4faa84dbdbc9cd61ed7586277";
-    const apiKey ="AAPK94552912f92044339f793453a64ea0f3jaPKY0TcXpPNcqyroJIv4b_q4Cc5iP573jCMtjGDbY6jKtAIli7A47B4OnM_wuxR";
-    const hapiKey = "AAPKd32a08f86e6b4eec8e366d1c31e86a571EI_Ixn-Rrhy2SGYbwN3Uu1iKvjRJXQkKpOuFzVlVIerGmcFbf3UBlyOOKodw6h4";
-    const arcgisPortal = "https://harvardworldmap.maps.arcgis.com/"
+  <script id="constants">
+    const appId = "JY0l5XAigaiMEZvg";
+    const arcgisServer = "https://services1.arcgis.com"
+    const arcgisPortal = "https://harvard-cga.maps.arcgis.com"  //"https://harvardworldmap.maps.arcgis.com/"
     const portalEndpoint = "sharing/rest/oauth2/token/";
-    const tokenEndpoint = arcgisPortal  + "/arcgis/sharing/rest/oauth2/token/";
+  </script>
+
+  <script>
     require([
       "esri/portal/Portal",
       "esri/config",
@@ -58,7 +54,8 @@
       "esri/widgets/Slider"
     ], (Portal,esriConfig,WebScene, SceneView, FeatureLayer, Slider) => {
 
-      esriConfig.apiKey = apiKey;
+      esriConfig.apikey= "AAPKd32a08f86e6b4eec8e366d1c31e86a571EI_Ixn-Rrhy2SGYbwN3Uu1iKvjRJXQkKpOuFzVlVIerGmcFbf3UBlyOOKodw6h4"
+
       const portal = new Portal({
         url: arcgisPortal+ portalEndpoint,
         authMode: "immediate"
@@ -71,15 +68,18 @@
       const webscene = new WebScene({
         portalItem: {
           // id: "2532c872d34f441186a65de21658d3cd"
-          id: "b9e8cf5332094687868d067f8ef27ade"
+          id: "b9e8cf5332094687868d067f8ef27ade",
+          portal: arcgisPortal //+ portalEndpoint
         }
       });
+
       const view = new SceneView({
         container: "viewDiv",
         map: webscene
       });
+
       const waterLayer = new FeatureLayer({
-        url:"https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Water_bodies/FeatureServer/0",
+        url: "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Water_bodies/FeatureServer/0",
         elevationInfo: {
           mode: "absolute-height",
           offset: 0,
@@ -90,10 +90,8 @@
             type: "polygon-3d",
             symbolLayers: [{
               type: "water",
-              waveDirection: 260,
-              color: "#25427c",
-              waveStrength: "moderate",
-              waterbodySize: "medium"
+              waveDirection: 260, color: "#25427c",
+              waveStrength: "moderate", waterbodySize: "medium"
             }]
           }
         }
@@ -107,9 +105,11 @@
         min: 0,
         max: 360,
         visibleElements: {
-          labels: true,},
+          labels: true,
+        },
         precision: 0,
-        values: [ 260 ]});
+        values: [260]
+      });
 
       slider.on("thumb-drag", (event) => {
         const value = parseInt(event.value);
@@ -127,7 +127,8 @@
           renderer.symbol.symbolLayers.getItemAt(0).waveStrength = event.target.value;
           waterLayer.renderer = renderer;
         });
-      };
+      }
+      ;
 
       function setWaterColor(color) {
         const renderer = waterLayer.renderer.clone();
@@ -145,6 +146,7 @@
         setWaterColor("#a2f9f5");
       });
     });
+
 
   </script>
 </head>
