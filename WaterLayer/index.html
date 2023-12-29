@@ -42,7 +42,7 @@
   </style>
   <script>
     let web_scene_id = document.getElementById("web_scene_id");
-    let webSceneId = $OS.getenv("webSceneId");
+    let webSceneId = $var.webSceneId;
     let apiKey = $secrets.apikey;
     require([
       "esri/config",
@@ -53,7 +53,7 @@
     ], (esriConfig,WebScene, SceneView, FeatureLayer, Slider) => {
 
       esriConfig.apiKey = apiKey;
-      
+
       const webscene = new WebScene({
         portalItem: {
           // id: "2532c872d34f441186a65de21658d3cd"
