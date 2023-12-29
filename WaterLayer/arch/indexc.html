@@ -55,9 +55,9 @@
 
   console.log("Start Script=========================")
 const appId = "JY0l5XAigaiMEZvg";
-const arcgisServer = "https://services1.arcgis.com"
-const arcgisPortal = "https://harvardworldmap.maps.arcgis.com/"
-const portalEndpoint = "sharing/rest/oauth2/token/";
+const arcgisPortal = $os.getenv("arcgisPortal")
+const portalEndpoint = $os.getenv("portalEndpoint");
+const apikey = $os.getenv("apikey");
 
  const portalLogin = async Promise => {
    const oAuthInfo = new OAuthInfo({
