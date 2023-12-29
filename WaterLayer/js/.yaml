@@ -1,0 +1,7 @@
+jobs:
+  build:
+      - name: Run a script
+        env:
+          MY_SECRET: ${{ secrets.api_key }}
+          VAR_WEB_SCENE_ID: ${{ secrets.webSceneId }}
+        run: node script.js
