@@ -42,8 +42,8 @@
   </style>
   <script>
     let web_scene_id = document.getElementById("web_scene_id");
-    let webSceneId = $var.webSceneId;
-    let apiKey = $secrets.apikey;
+    let webSceneId = process.env.webSceneId;
+    let apiKey = process.env.apikey;
     require([
       "esri/config",
       "esri/WebScene",
